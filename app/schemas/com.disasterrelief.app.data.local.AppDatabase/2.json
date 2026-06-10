@@ -1,0 +1,317 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "d7b16fc27e348d805e6940f5e9ac544f",
+    "entities": [
+      {
+        "tableName": "sos_requests",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `injuryType` TEXT NOT NULL, `severity` INTEGER NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `description` TEXT NOT NULL, `createdByNodeId` TEXT NOT NULL, `lastUpdatedTimestamp` INTEGER NOT NULL, `originNodeId` TEXT NOT NULL, `isDeleted` INTEGER NOT NULL, `isSyncedToCloud` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "injuryType",
+            "columnName": "injuryType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "severity",
+            "columnName": "severity",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdByNodeId",
+            "columnName": "createdByNodeId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastUpdatedTimestamp",
+            "columnName": "lastUpdatedTimestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "originNodeId",
+            "columnName": "originNodeId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isDeleted",
+            "columnName": "isDeleted",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isSyncedToCloud",
+            "columnName": "isSyncedToCloud",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sos_requests_lastUpdatedTimestamp",
+            "unique": false,
+            "columnNames": [
+              "lastUpdatedTimestamp"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sos_requests_lastUpdatedTimestamp` ON `${TABLE_NAME}` (`lastUpdatedTimestamp`)"
+          },
+          {
+            "name": "index_sos_requests_isSyncedToCloud",
+            "unique": false,
+            "columnNames": [
+              "isSyncedToCloud"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sos_requests_isSyncedToCloud` ON `${TABLE_NAME}` (`isSyncedToCloud`)"
+          },
+          {
+            "name": "index_sos_requests_createdByNodeId",
+            "unique": false,
+            "columnNames": [
+              "createdByNodeId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sos_requests_createdByNodeId` ON `${TABLE_NAME}` (`createdByNodeId`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "messages",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `senderNodeId` TEXT NOT NULL, `senderName` TEXT NOT NULL, `content` TEXT NOT NULL, `recipientId` TEXT, `isAlert` INTEGER NOT NULL, `alertPriority` INTEGER NOT NULL, `lastUpdatedTimestamp` INTEGER NOT NULL, `originNodeId` TEXT NOT NULL, `isDeleted` INTEGER NOT NULL, `isSyncedToCloud` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "senderNodeId",
+            "columnName": "senderNodeId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "senderName",
+            "columnName": "senderName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "content",
+            "columnName": "content",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recipientId",
+            "columnName": "recipientId",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "isAlert",
+            "columnName": "isAlert",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "alertPriority",
+            "columnName": "alertPriority",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastUpdatedTimestamp",
+            "columnName": "lastUpdatedTimestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "originNodeId",
+            "columnName": "originNodeId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isDeleted",
+            "columnName": "isDeleted",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isSyncedToCloud",
+            "columnName": "isSyncedToCloud",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_messages_lastUpdatedTimestamp",
+            "unique": false,
+            "columnNames": [
+              "lastUpdatedTimestamp"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_messages_lastUpdatedTimestamp` ON `${TABLE_NAME}` (`lastUpdatedTimestamp`)"
+          },
+          {
+            "name": "index_messages_isSyncedToCloud",
+            "unique": false,
+            "columnNames": [
+              "isSyncedToCloud"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_messages_isSyncedToCloud` ON `${TABLE_NAME}` (`isSyncedToCloud`)"
+          },
+          {
+            "name": "index_messages_senderNodeId",
+            "unique": false,
+            "columnNames": [
+              "senderNodeId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_messages_senderNodeId` ON `${TABLE_NAME}` (`senderNodeId`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "user_nodes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `displayName` TEXT NOT NULL, `role` TEXT NOT NULL, `lastKnownLatitude` REAL, `lastKnownLongitude` REAL, `lastUpdatedTimestamp` INTEGER NOT NULL, `originNodeId` TEXT NOT NULL, `isDeleted` INTEGER NOT NULL, `isOnline` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "displayName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "role",
+            "columnName": "role",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastKnownLatitude",
+            "columnName": "lastKnownLatitude",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "lastKnownLongitude",
+            "columnName": "lastKnownLongitude",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "lastUpdatedTimestamp",
+            "columnName": "lastUpdatedTimestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "originNodeId",
+            "columnName": "originNodeId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isDeleted",
+            "columnName": "isDeleted",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isOnline",
+            "columnName": "isOnline",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_user_nodes_lastUpdatedTimestamp",
+            "unique": false,
+            "columnNames": [
+              "lastUpdatedTimestamp"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_user_nodes_lastUpdatedTimestamp` ON `${TABLE_NAME}` (`lastUpdatedTimestamp`)"
+          },
+          {
+            "name": "index_user_nodes_isOnline",
+            "unique": false,
+            "columnNames": [
+              "isOnline"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_user_nodes_isOnline` ON `${TABLE_NAME}` (`isOnline`)"
+          }
+        ],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd7b16fc27e348d805e6940f5e9ac544f')"
+    ]
+  }
+}
