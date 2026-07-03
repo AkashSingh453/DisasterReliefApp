@@ -1,18 +1,15 @@
 package com.disasterrelief.app.data.sync
 
-import kotlinx.serialization.Serializable
-
 /**
  * Wire-format payload for CRDT delta synchronization.
  *
  * This structure is used for both:
- * 1. **Mesh transport**: Serialized to compact JSON bytes and sent via Nearby Connections payloads.
- * 2. **Cloud sync**: Serialized as JSON request/response body via Retrofit.
+ * 1. **Mesh transport**: Serialized to compact protobuf bytes and sent via Nearby Connections payloads.
+ * 2. **Cloud sync**: Transmitted as gRPC request/response body.
  *
  * The payload contains delta updates — only records modified since the last sync point.
  * Each DTO mirrors its corresponding Room entity but is decoupled for transport optimization.
  */
-@Serializable
 data class SyncPayload(
     /** UUID of the node that produced this payload. */
     val sourceNodeId: String,
@@ -28,9 +25,7 @@ data class SyncPayload(
 
 /**
  * Transport DTO for SOS requests. Mirrors [com.disasterrelief.app.data.local.entity.SOSRequestEntity]
- * but uses kotlinx.serialization for compact JSON encoding.
  */
-@Serializable
 data class SOSRequestDto(
     val id: String,
     val injuryType: String,
@@ -47,7 +42,6 @@ data class SOSRequestDto(
 /**
  * Transport DTO for chat messages.
  */
-@Serializable
 data class MessageDto(
     val id: String,
     val senderNodeId: String,
@@ -64,7 +58,6 @@ data class MessageDto(
 /**
  * Transport DTO for user node identity records.
  */
-@Serializable
 data class UserNodeDto(
     val id: String,
     val displayName: String,
@@ -77,12 +70,3 @@ data class UserNodeDto(
     val isOnline: Boolean = false
 )
 
-/**
- * Server response after a successful sync upload.
- */
-@Serializable
-data class SyncResponse(
-    val accepted: Boolean,
-    val serverTimestamp: Long,
-    val message: String = ""
-)

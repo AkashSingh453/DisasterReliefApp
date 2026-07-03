@@ -1,51 +1,50 @@
 package com.disasterrelief.app.mesh
 
-import com.disasterrelief.app.data.sync.CrdtSyncEngine
 import com.disasterrelief.app.data.sync.SyncPayload
+import com.disasterrelief.app.data.sync.toDomain
+import com.disasterrelief.app.data.sync.toProto
+import com.disasterrelief.proto.SyncPayloadProto
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
  * Handles byte-level payload construction and reconstruction for Nearby Connections transport.
  *
- * Conversion pipeline:
+ * Conversion pipeline (now using Protocol Buffers instead of JSON):
  * ```
- * OUTBOUND: SyncPayload → JSON String → UTF-8 byte[] → Payload.fromBytes()
- * INBOUND:  Payload.asBytes() → UTF-8 byte[] → JSON String → SyncPayload
+ * OUTBOUND: SyncPayload → SyncPayloadProto → protobuf byte[] → Payload.fromBytes()
+ * INBOUND:  Payload.asBytes() → protobuf byte[] → SyncPayloadProto → SyncPayload
  * ```
  *
- * This layer exists to isolate the serialization format (currently JSON) from both the
- * mesh manager and the CRDT engine. If a more compact format (e.g., Protocol Buffers,
- * MessagePack) is needed in the future, only this class needs to change.
+ * Protocol Buffers provide ~4x smaller payloads and ~20x faster parsing compared to JSON,
+ * which is critical for low-bandwidth mesh networks and battery-constrained disaster scenarios.
  */
 @Singleton
 class MeshPayloadHandler @Inject constructor() {
 
     /**
-     * Encodes a [SyncPayload] into a byte array for transmission via Nearby Connections.
-     *
-     * Uses the [CrdtSyncEngine]'s JSON serializer for consistency with the cloud sync format.
-     * The resulting bytes are compact (no pretty-printing, defaults encoded).
+     * Encodes a [SyncPayload] into a compact protobuf byte array for transmission
+     * via Nearby Connections.
      *
      * @param payload The sync payload to encode.
-     * @param syncEngine The CRDT engine providing the JSON serializer.
-     * @return UTF-8 encoded byte array of the JSON representation.
+     * @return Protobuf-encoded byte array (significantly smaller than JSON).
      */
-    fun encodePayload(payload: SyncPayload, syncEngine: CrdtSyncEngine): ByteArray {
-        val jsonString = syncEngine.encodeToJsonString(payload)
-        return jsonString.toByteArray(Charsets.UTF_8)
+    fun encodePayload(payload: SyncPayload): ByteArray {
+        val bytes = payload.toProto().toByteArray()
+        android.util.Log.d("MeshPayloadHandler", "Encoded payload for mesh transfer: ${bytes.size} bytes (SOS: ${payload.sosRequests.size}, Msgs: ${payload.messages.size})")
+        return bytes
     }
 
     /**
-     * Decodes a byte array received from Nearby Connections back into a [SyncPayload].
+     * Decodes a protobuf byte array received from Nearby Connections back into a [SyncPayload].
      *
      * @param bytes Raw bytes received from [com.google.android.gms.nearby.connection.Payload.asBytes].
-     * @param syncEngine The CRDT engine providing the JSON deserializer.
      * @return The deserialized [SyncPayload] ready for CRDT merge.
-     * @throws kotlinx.serialization.SerializationException if the bytes contain invalid JSON.
+     * @throws com.google.protobuf.InvalidProtocolBufferException if the bytes contain invalid protobuf data.
      */
-    fun decodePayload(bytes: ByteArray, syncEngine: CrdtSyncEngine): SyncPayload {
-        val jsonString = bytes.toString(Charsets.UTF_8)
-        return syncEngine.decodeFromJsonString(jsonString)
+    fun decodePayload(bytes: ByteArray): SyncPayload {
+        val proto = SyncPayloadProto.parseFrom(bytes)
+        android.util.Log.d("MeshPayloadHandler", "Decoded payload from mesh transfer: ${bytes.size} bytes (SOS: ${proto.sosRequestsCount}, Msgs: ${proto.messagesCount})")
+        return proto.toDomain()
     }
 }

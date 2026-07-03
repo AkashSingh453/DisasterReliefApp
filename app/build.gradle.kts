@@ -5,6 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
+    id("com.google.protobuf")
 }
 
 android {
@@ -56,15 +57,61 @@ android {
         arg("room.incremental", "true")
         arg("room.generateKotlin", "true")
     }
+
+    sourceSets {
+        getByName("main") {
+            java {
+                srcDir("build/generated/source/proto/debug/java")
+                srcDir("build/generated/source/proto/debug/grpc")
+                srcDir("build/generated/source/proto/debug/grpckt")
+                srcDir("build/generated/source/proto/release/java")
+                srcDir("build/generated/source/proto/release/grpc")
+                srcDir("build/generated/source/proto/release/grpckt")
+            }
+        }
+    }
+}
+
+// ── Protobuf / gRPC Code Generation ──
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.25.5"
+    }
+    plugins {
+        create("grpc") {
+            artifact = "io.grpc:protoc-gen-grpc-java:1.62.2"
+        }
+        create("grpckt") {
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:1.4.1:jdk8@jar"
+        }
+    }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                create("java") {
+                    option("lite")
+                }
+            }
+            task.plugins {
+                create("grpc") {
+                    option("lite")
+                }
+                create("grpckt") {
+                    option("lite")
+                }
+            }
+        }
+    }
 }
 
 dependencies {
-    // Ktor Client for HTTP API
-    implementation("io.ktor:ktor-client-core:2.3.8")
-    implementation("io.ktor:ktor-client-cio:2.3.8")
-    implementation("io.ktor:ktor-client-content-negotiation:2.3.8")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.8")
-    implementation("io.ktor:ktor-client-logging:2.3.8")
+    // ── Protobuf & gRPC (Cloud Sync + Mesh Serialization) ──
+    implementation("com.google.protobuf:protobuf-javalite:3.25.5")
+    implementation("io.grpc:grpc-okhttp:1.62.2")
+    implementation("io.grpc:grpc-protobuf-lite:1.62.2")
+    implementation("io.grpc:grpc-stub:1.62.2")
+    implementation("io.grpc:grpc-kotlin-stub:1.4.1")
+    implementation("javax.annotation:javax.annotation-api:1.3.2")
 
     // MediaPipe GenAI Engine for Qwen model
     implementation("com.google.mediapipe:tasks-genai:0.10.14")
@@ -108,13 +155,11 @@ dependencies {
     // ── OSMDroid (Offline Mapping) ──
     implementation("org.osmdroid:osmdroid-android:6.1.18")
 
-    // ── Retrofit (Cloud Sync) ──
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    // ── OkHttp (used by gRPC-OkHttp transport & logging) ──
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
 
-    // ── Kotlinx Serialization ──
+    // ── Kotlinx Serialization (still used for Room internal serialization) ──
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
     // ── Coroutines ──
@@ -130,4 +175,17 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.12.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+}
+
+// Fix for Gradle implicit dependency error between KSP and Protobuf
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        afterEvaluate {
+            val variantName = variant.name.replaceFirstChar { it.uppercase() }
+            val protoTaskName = "generate${variantName}Proto"
+            val kspTaskName = "ksp${variantName}Kotlin"
+            
+            tasks.findByName(kspTaskName)?.dependsOn(protoTaskName)
+        }
+    }
 }

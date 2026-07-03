@@ -125,12 +125,13 @@ class MeshNetworkManager @Inject constructor(
     private val payloadCallback = MeshPayloadCallbackImpl(
         onPayloadReceived = { endpointId, payload ->
             scope.launch {
+                val size = payload.asBytes()?.size ?: 0
+                Log.v(TAG, "Successfully received $size bytes from peer $endpointId")
                 handleIncomingPayload(endpointId, payload)
             }
         },
         onPayloadTransferUpdate = { endpointId, update ->
-            // Transfer progress tracking (for large payloads if needed)
-            Log.v(TAG, "Payload transfer update from $endpointId: ${update.status}")
+            // Removed verbose transfer update logging for cleaner metrics
         }
     )
 
@@ -168,7 +169,7 @@ class MeshNetworkManager @Inject constructor(
      * Called after a local write (new SOS, new message) to propagate changes.
      */
     fun broadcastPayload(payload: SyncPayload, excludeEndpointId: String? = null) {
-        val bytes = payloadHandler.encodePayload(payload, crdtSyncEngine)
+        val bytes = payloadHandler.encodePayload(payload)
         val nearbyPayload = Payload.fromBytes(bytes)
 
         val peerEndpoints = _connectedPeers.value
@@ -187,7 +188,7 @@ class MeshNetworkManager @Inject constructor(
                             )
                         )
                     }
-                    Log.d(TAG, "Broadcast payload to ${peerEndpoints.size} peers")
+                    Log.d(TAG, "Broadcast payload to ${peerEndpoints.size} peers (Size: ${bytes.size} bytes)")
                 }
                 .addOnFailureListener { e ->
                     Log.w(TAG, "Failed to broadcast payload", e)
@@ -259,7 +260,7 @@ class MeshNetworkManager @Inject constructor(
     private suspend fun sendFullSyncToPeer(endpointId: String) {
         try {
             val payload = crdtSyncEngine.serializeDelta(localNodeId, sinceTimestamp = 0L)
-            val bytes = payloadHandler.encodePayload(payload, crdtSyncEngine)
+            val bytes = payloadHandler.encodePayload(payload)
             connectionsClient.sendPayload(endpointId, Payload.fromBytes(bytes))
             Log.d(TAG, "Sent full sync to $endpointId")
         } catch (e: Exception) {
@@ -274,7 +275,7 @@ class MeshNetworkManager @Inject constructor(
     private suspend fun handleIncomingPayload(endpointId: String, payload: Payload) {
         try {
             val bytes = payload.asBytes() ?: return
-            val syncPayload = payloadHandler.decodePayload(bytes, crdtSyncEngine)
+            val syncPayload = payloadHandler.decodePayload(bytes)
 
             // Merge into local database
             val hasNewData = crdtSyncEngine.mergeDelta(syncPayload)

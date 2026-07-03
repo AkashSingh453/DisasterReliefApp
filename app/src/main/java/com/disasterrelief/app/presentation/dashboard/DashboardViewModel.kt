@@ -106,9 +106,12 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+    val BAseURL = "http://192.168.31.81:8082/"
+
     fun startMesh() {
         meshNetworkManager.startMesh(localNodeId, localDisplayName)
-        cloudSyncManager.connect("http://ec2-13-222-13-194.compute-1.amazonaws.com/")
+       // cloudSyncManager.connect("http://ec2-13-222-13-194.compute-1.amazonaws.com/")
+        cloudSyncManager.connect(BAseURL)
         cloudSyncManager.initialSync(localNodeId)
     }
 

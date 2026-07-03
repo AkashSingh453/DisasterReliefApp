@@ -8,8 +8,6 @@ import com.disasterrelief.app.data.local.entity.SOSRequestEntity
 import com.disasterrelief.app.data.local.entity.UserNodeEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -38,15 +36,7 @@ class CrdtSyncEngine @Inject constructor(
     private val userNodeDao: UserNodeDao
 ) {
 
-    /**
-     * Compact JSON configuration: no pretty-printing, ignore unknown keys for forward compat,
-     * encode default values to ensure tombstone flags are always present in payloads.
-     */
-    private val json = Json {
-        ignoreUnknownKeys = true
-        encodeDefaults = true
-        isLenient = false
-    }
+
 
     // ══════════════════════════════════════════════════════════════════════
     //  SERIALIZE: Room DB → SyncPayload (for outbound transmission)
@@ -76,21 +66,7 @@ class CrdtSyncEngine @Inject constructor(
         }
     }
 
-    /**
-     * Serializes a [SyncPayload] to a compact JSON string.
-     * Used by [com.disasterrelief.app.mesh.MeshPayloadHandler] to produce byte arrays
-     * for Nearby Connections transport.
-     */
-    fun encodeToJsonString(payload: SyncPayload): String {
-        return json.encodeToString(payload)
-    }
 
-    /**
-     * Deserializes a JSON string back into a [SyncPayload].
-     */
-    fun decodeFromJsonString(jsonString: String): SyncPayload {
-        return json.decodeFromString<SyncPayload>(jsonString)
-    }
 
     // ══════════════════════════════════════════════════════════════════════
     //  MERGE: SyncPayload → Room DB (for inbound data from peers/cloud)

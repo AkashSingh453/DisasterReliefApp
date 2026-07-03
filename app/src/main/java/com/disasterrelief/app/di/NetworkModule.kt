@@ -1,72 +1,41 @@
 package com.disasterrelief.app.di
 
 import com.disasterrelief.app.BuildConfig
-import com.disasterrelief.app.data.remote.SyncApiService
-import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.disasterrelief.proto.SyncServiceGrpcKt
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Retrofit
-import java.util.concurrent.TimeUnit
+import io.grpc.ManagedChannel
+import io.grpc.okhttp.OkHttpChannelBuilder
 import javax.inject.Singleton
+import java.net.URI
 
 /**
- * Hilt module providing the Retrofit HTTP client for cloud synchronization.
+ * Hilt module providing the gRPC client for cloud synchronization.
  */
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    @Provides
-    @Singleton
-    fun provideJson(): Json {
-        return Json {
-            ignoreUnknownKeys = true
-            encodeDefaults = true
-            isLenient = false
-        }
-    }
-
-    @Provides
-    @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
-        return OkHttpClient.Builder()
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
-            .addInterceptor(
-                HttpLoggingInterceptor().apply {
-                    level = if (BuildConfig.DEBUG) {
-                        HttpLoggingInterceptor.Level.BODY
-                    } else {
-                        HttpLoggingInterceptor.Level.NONE
-                    }
-                }
-            )
-            .build()
-    }
-
     val BASEURL = BuildConfig.SYNC_BASE_URL
 
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient, json: Json): Retrofit {
-        val contentType = "application/json".toMediaType()
-        return Retrofit.Builder()
-            .baseUrl(BASEURL)
-            .client(okHttpClient)
-            .addConverterFactory(json.asConverterFactory(contentType))
+    fun provideGrpcChannel(): ManagedChannel {
+        // Parse host and port from the base URL string
+        val uri = URI(BASEURL)
+        val host = uri.host
+        val port = uri.port.takeIf { it != -1 } ?: 80
+
+        return OkHttpChannelBuilder.forAddress(host, port)
+            .usePlaintext() // HTTP/2 plaintext for local development/testing
             .build()
     }
 
     @Provides
     @Singleton
-    fun provideSyncApiService(retrofit: Retrofit): SyncApiService {
-        return retrofit.create(SyncApiService::class.java)
+    fun provideSyncServiceStub(channel: ManagedChannel): SyncServiceGrpcKt.SyncServiceCoroutineStub {
+        return SyncServiceGrpcKt.SyncServiceCoroutineStub(channel)
     }
 }
